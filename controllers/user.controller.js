@@ -32,7 +32,7 @@ exports.getAllUsers = async (req, res) => {
         res.status(200).json({ success: true, data: user})
       }
 
-    }catch(error){
+    }catch(err){
       res.status(400).json({success: false, message: "could not retrieve user information ", errorMessage: err.message})
     }
   }

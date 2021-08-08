@@ -8,6 +8,6 @@ function initializeDbConnection(){
 
 }
 
-module.exports = {initializeDbConnection}
+module.exports = { initializeDbConnection }
 
 

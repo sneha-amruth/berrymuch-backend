@@ -6,7 +6,6 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-
 const productRoutes = require("./routes/products.router");
 app.use("/api/products", productRoutes);
 
@@ -19,7 +18,7 @@ app.use("/api/cart", cartRoutes);
 const wishlistRoutes = require("./routes/wishlist.router");
 app.use("/api/wishlist", wishlistRoutes);
 
-const {initializeDbConnection} = require("./db/db.connect")
+const { initializeDbConnection } = require("./db/db.connect")
 const PORT = 3000;
 initializeDbConnection();
 
