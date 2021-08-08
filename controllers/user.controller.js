@@ -1,5 +1,9 @@
 const {extend} = require("lodash");
 const { User } = require("../models/user.model");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+
+const myJWTSecret = process.env['JWT_SECRET'];
 
 exports.getAllUsers = async (req, res) => {
     try {
@@ -11,30 +15,35 @@ exports.getAllUsers = async (req, res) => {
 
   }
 
-  exports.createNewUser = async (req, res) => {
-    try {
-      const user = req.body;
-      const NewUser = new User(user);
-      const savedUser = await NewUser.save();
-      res.json({ success: true, data: savedUser })
-    } catch (err) {
-      res.status(500).json({ success: false, message: "unable to add user", errorMessage: err.message })
-    }
+exports.createNewUser = async(req, res) => {
+  try{
+    const { firstName, lastName, email, password } = req.body
+    const user = req.body
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const NewUser = new User({...user, email, password: hashedPassword});
+    const savedUser = await NewUser.save();
+    const token = jwt.sign({ userId: savedUser._id }, myJWTSecret, {expiresIn: '24h'});
+    res.json({ success: true, data: savedUser, token: token, message: "user added"});
+  } catch(err) {
+    res.status(500).json({ success: false, message: "unable to add user", errorMessage: err.message })
   }
+}
 
-  exports.loginUser = async (req, res) => {
-    try {
-      const {email, password} = req.body;
-      const user = await User.findOne({email: email, password: password});
-      if(!user){
-        return res.status(200).json({ success: false, message: "Ivalid email/password"});
-      }else {
-        res.status(200).json({ success: true, data: user})
-      }
-
-    }catch(err){
-      res.status(400).json({success: false, message: "could not retrieve user information ", errorMessage: err.message})
+exports.loginUser = async(req, res) => {
+    const {email, password} = req.body;
+    const user = await User.findOne({email: email});
+    if(user == null) {
+     return res.status(200).json({success: false, message: "Invalid email"});
     }
+  try{
+     if(await bcrypt.compare(password, user.password)){
+      const token = jwt.sign({ userId: user._id }, myJWTSecret, {expiresIn: '24h'})
+      res.status(200).json({ success: true, data: {userId: user._id, username: user.firstName, email: user.email}, token})
+     } else {
+       return res.status(200).json({success: false, message: "Invalid password"})
+     }
+  } catch(err){
+    res.status(400).json({success: false, message: "could not retrieve user information ", errorMessage: err.message})
   }
-
+}
   
